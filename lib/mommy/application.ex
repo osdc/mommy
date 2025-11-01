@@ -11,7 +11,7 @@ defmodule Mommy.Application do
       # Start the Telemetry supervisor
       MommyWeb.Telemetry,
       # Start the Ecto repository
-      Mommy.Repo,
+      # Mommy.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: Mommy.PubSub},
       # Start Finch
