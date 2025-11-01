@@ -54,10 +54,14 @@ defmodule Mommy.MixProject do
       {:openai_ex, "~> 0.9"},
       {:nostrum, github: "Kraigie/nostrum"},
       # --- Discord + Audio dependencies ---
-      {:membrane_core, "~> 1.0"},                 # Core Membrane framework
-      {:membrane_file_plugin, "~> 0.14"},         # For saving audio to file
-      {:membrane_wav_plugin, "~> 0.10"},          # For writing .wav files
-      {:membrane_opus_plugin, "~> 0.13"},         # For decoding Opus audio from Discord
+      # Core Membrane framework
+      {:membrane_core, "~> 1.0"},
+      # For saving audio to file
+      {:membrane_file_plugin, "~> 0.14"},
+      # For writing .wav files
+      {:membrane_wav_plugin, "~> 0.10"},
+      # For decoding Opus audio from Discord
+      {:membrane_opus_plugin, "~> 0.13"}
     ]
   end
 

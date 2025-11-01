@@ -28,7 +28,7 @@ defmodule Mommy.Discord do
     end)
   end
 
-  def handle_event({:INTERACTION_CREATE, interaction, _ws_state}) do
+  def handle_event({:INTERACTION_CREATE, %{guild_id: guild_id} = interaction, _ws_state}) do
     # Run the command, and check for a response message, or default to a checkmark emoji
     message = "_ara ara~ gomenasai_"
 
@@ -37,10 +37,16 @@ defmodule Mommy.Discord do
         {:msg, "You must be in a voice channel to summon me"}
 
       voice_channel_id ->
-        Voice.join_channel(interaction.guild_id, voice_channel_id)
+        Voice.join_channel(guild_id, voice_channel_id)
+        # Voice.start_listen_async(guild_id)
     end
 
     Interaction.create_response(interaction, %{type: 4, data: %{content: message}})
+  end
+
+  def handle_event({:VOICE_INCOMING_PACKET, rtp_packet, _ws_state}) do
+    # Run the command, and check for a response message, or default to a checkmark emoji
+    Logger.info("aaaaa")
   end
 
   def handle_event(_), do: :noop
