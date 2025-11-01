@@ -50,7 +50,8 @@ defmodule Mommy.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.4"},
       {:req, "~> 0.5"},
-      {:plug_cowboy, "~> 2.5"}
+      {:plug_cowboy, "~> 2.5"},
+	  {:openai_ex, "~> 0.4"}
     ]
   end
 
