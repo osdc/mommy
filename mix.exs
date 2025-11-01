@@ -5,7 +5,7 @@ defmodule Mommy.MixProject do
     [
       app: :mommy,
       version: "0.1.0",
-      elixir: "~> 1.14",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -51,7 +51,8 @@ defmodule Mommy.MixProject do
       {:jason, "~> 1.4"},
       {:req, "~> 0.5"},
       {:plug_cowboy, "~> 2.5"},
-	  {:openai_ex, "~> 0.4"}
+      {:openai_ex, "~> 0.4"},
+      {:nostrum, github: "Kraigie/nostrum"}
     ]
   end
 

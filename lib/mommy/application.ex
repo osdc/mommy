@@ -7,6 +7,13 @@ defmodule Mommy.Application do
 
   @impl true
   def start(_type, _args) do
+    bot_options = %{
+      name: Mommy,
+      consumer: Mommy.Discord,
+      intents: [:guilds, :guild_voice_states],
+      wrapped_token: fn -> Application.get_env(:mommy, :bot_token) end
+    }
+
     children = [
       # Start the Telemetry supervisor
       MommyWeb.Telemetry,
@@ -17,9 +24,8 @@ defmodule Mommy.Application do
       # Start Finch
       {Finch, name: Mommy.Finch},
       # Start the Endpoint (http/https)
-      MommyWeb.Endpoint
-      # Start a worker by calling: Mommy.Worker.start_link(arg)
-      # {Mommy.Worker, arg}
+      MommyWeb.Endpoint,
+      {Nostrum.Bot, bot_options}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

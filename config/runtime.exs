@@ -20,9 +20,9 @@ if System.get_env("PHX_SERVER") do
   config :mommy, MommyWeb.Endpoint, server: true
 end
 
-if config_env() == :prod do
+if config_env() != :test do
   database_url =
-    System.get_env("DATABASE_URL") ||
+    System.get_env("DATABASE_URL") || "" ||
       raise """
       environment variable DATABASE_URL is missing.
       For example: ecto://USER:PASS@HOST/DATABASE
@@ -42,7 +42,7 @@ if config_env() == :prod do
   # to check this value into version control, so we use an environment
   # variable instead.
   secret_key_base =
-    System.get_env("SECRET_KEY_BASE") ||
+    System.get_env("SECRET_KEY_BASE") || "" ||
       raise """
       environment variable SECRET_KEY_BASE is missing.
       You can generate one by calling: mix phx.gen.secret
@@ -62,6 +62,10 @@ if config_env() == :prod do
       port: port
     ],
     secret_key_base: secret_key_base
+
+  config :mommy,
+    bot_id: System.fetch_env!("BOT_ID") |> String.to_integer(),
+    bot_token: System.fetch_env!("BOT_TOKEN")
 
   # ## SSL Support
   #
