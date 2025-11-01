@@ -65,7 +65,8 @@ if config_env() != :test do
 
   config :mommy,
     bot_id: System.fetch_env!("BOT_ID") |> String.to_integer(),
-    bot_token: System.fetch_env!("BOT_TOKEN")
+    bot_token: System.fetch_env!("BOT_TOKEN"),
+    openai_api_key: System.fetch_env!("OPENAI_API_KEY")
 
   # ## SSL Support
   #
