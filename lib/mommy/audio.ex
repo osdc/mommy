@@ -10,14 +10,12 @@ defmodule Mommy.Audio do
     sample_rate = 44100
     freq = 440
 
-
     total_samples = div(sample_rate * duration_ms, 1000)
 
     samples =
       for n <- 0..total_samples do
         :math.sin(2 * :math.pi() * freq * n / sample_rate)
       end
-
 
     pcm_data =
       samples
@@ -26,7 +24,6 @@ defmodule Mommy.Audio do
         <<val::little-signed-16>>
       end)
       |> IO.iodata_to_binary()
-
 
     header = wav_header(byte_size(pcm_data), sample_rate, 1, 16)
     File.write!(filename, [header, pcm_data])
@@ -56,23 +53,23 @@ defmodule Mommy.Audio do
     >>
   end
 
-  @impl true
-  def handle_init(ctx , opts) do
-    children = [
-      source: %Membrane.Discord.Source{
-        token: System.get_env("1434169620549599393"),
-        guild_id: "475154983910899722",
-        channel_id: "476759193244925954"
-      },
-      decoder: Membrane.Opus.Decoder,
-      sink: %Membrane.File.Sink{location: "output.wav"}
-    ]
-    links= [
-      link(:source)
-      |> to(:decoder)
-      |> to(:sink)
-    ]
+  # @impl true
+  # def handle_init(ctx , opts) do
+  #   children = [
+  #     source: %Membrane.Discord.Source{
+  #       token: System.get_env("1434169620549599393"),
+  #       guild_id: "475154983910899722",
+  #       channel_id: "476759193244925954"
+  #     },
+  #     decoder: Membrane.Opus.Decoder,
+  #     sink: %Membrane.File.Sink{location: "output.wav"}
+  #   ]
+  #   links= [
+  #     link(:source)
+  #     |> to(:decoder)
+  #     |> to(:sink)
+  #   ]
 
-  {{:ok, spec: %Membrane.ChildrenSpec{children: children, links: links}}, %{}}
-  end
+  # {{:ok, spec: %Membrane.ChildrenSpec{children: children, links: links}}, %{}}
+  # end
 end
