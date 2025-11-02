@@ -55,13 +55,13 @@ defmodule Mommy.MixProject do
       {:nostrum, github: "Kraigie/nostrum"},
       # --- Discord + Audio dependencies ---
       # Core Membrane framework
-      {:membrane_core, "~> 1.0"},
+      {:membrane_core, "~> 1.2"},
       # For saving audio to file
-      {:membrane_file_plugin, "~> 0.14"},
+      {:membrane_file_plugin, "~> 0.17"},
       # For writing .wav files
       {:membrane_wav_plugin, "~> 0.10"},
       # For decoding Opus audio from Discord
-      {:membrane_opus_plugin, "~> 0.13"}
+      {:membrane_opus_plugin, "~> 0.20"}
     ]
   end
 
