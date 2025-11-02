@@ -62,12 +62,14 @@ defmodule Mommy.Discord do
   end
 
   def handle_event({:VOICE_INCOMING_PACKET, rtp_packet, _ws_state}) do
-    # You might want to extract this from the packet or store it somewhere
-    # guild_id = 475_154_983_910_899_722
-    pid = :global.whereis_name(Mommy.Supervisor)
-    # Membrane.Pipeline.call(pid, rtp_packet)
-    # :global.send(Mommy.Supervisor, {:rtp_packet, rtp_packet})
-    # Mommy.TableManager.send_rtp_packet(guild_id, rtp_packet)
+    # Forward the RTP packet to the custom Discord RTP source
+    case :global.whereis_name(Mommy.DiscordRtpSource) do
+      :undefined ->
+        # Source not available, silently drop
+        :ok
+      source_pid ->
+        send(source_pid, {:discord_rtp_packet, rtp_packet})
+    end
   end
 
   def handle_event(_), do: :noop

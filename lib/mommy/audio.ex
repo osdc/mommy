@@ -3,6 +3,7 @@ defmodule Mommy.Audio do
   Handles simple audio recording logic.
   """
   use Membrane.Pipeline
+  require Logger
 
   def record_to_wav(filename, duration_ms) do
     IO.puts("Recording #{filename} for #{duration_ms} ms...")
@@ -55,14 +56,13 @@ defmodule Mommy.Audio do
 
   @impl true
   def handle_init(_ctx, opts) do
+    # Since Discord provides already-depayloaded Opus frames,
+    # we can skip the RTP parsing and go directly to Opus decoding
     spec =
       [
-        child(:rtp_source, %Membrane.RTP.SessionBin{
-          secure?: false,
-          rtcp_receiver_report_interval: nil,
-          rtcp_sender_report_interval: nil
-        })
-        # |> child(:demuxer, %Membrane.RTP.Demuxer{})
+        child(:discord_source, Mommy.DiscordRtpSource)
+        |> child(:decoder, Membrane.Opus.Decoder)
+        |> child(:file_sink, %Membrane.File.Sink{location: opts.output_file})
       ]
 
     {[spec: spec], %{output_file: opts.output_file, ssrc: nil}}
@@ -112,14 +112,8 @@ defmodule Mommy.Audio do
   end
 
   @impl true
-  def handle_info({:rtp_packet, rtp_packet}, _ctx, state) do
-    # Send the RTP packet to the RTP source element
-    actions = [notify_child: {:rtp_source, {:rtp_packet, rtp_packet}}]
-    {actions, state}
-  end
-
-  @impl true
-  def handle_info(x, _state) do
+  def handle_info(x, _ctx, state) do
     Logger.debug(x)
+    {[], state}
   end
 end
