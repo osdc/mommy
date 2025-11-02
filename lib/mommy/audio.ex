@@ -80,7 +80,7 @@ defmodule Mommy.Audio do
     spec =
       [
         get_child(:rtp_source)
-        |> via_out(:output, options: [stream_id: {:encoding_name, :opus}])
+        |> via_out(Pad.ref(:output, ssrc))
         |> child(:depayloader, Membrane.RTP.Opus.Depayloader)
         |> child(:decoder, Membrane.Opus.Decoder)
         |> child(:audio_player, Membrane.PortAudio.Sink)
@@ -100,9 +100,26 @@ defmodule Mommy.Audio do
   end
 
   @impl true
-  def handle_cast({:rtp_packet, rtp_packet}, state) do
+  def handle_info({:packet, packet}, _ctx, state) when is_binary(packet) do
+    if state.source_pid do
+      # Forward packet to CustomSource
+      send(state.source_pid, {:packet, packet})
+    else
+      IO.warn("CustomSource not ready yet, packet dropped")
+    end
+
+    {[], state}
+  end
+
+  @impl true
+  def handle_info({:rtp_packet, rtp_packet}, _ctx, state) do
     # Send the RTP packet to the RTP source element
     actions = [notify_child: {:rtp_source, {:rtp_packet, rtp_packet}}]
     {actions, state}
+  end
+
+  @impl true
+  def handle_info(x, _state) do
+    Logger.debug(x)
   end
 end

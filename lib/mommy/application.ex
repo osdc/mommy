@@ -25,6 +25,8 @@ defmodule Mommy.Application do
       {Finch, name: Mommy.Finch},
       # Start the Endpoint (http/https)
       MommyWeb.Endpoint,
+      # Mommy.Audio,
+      Mommy.TableManager,
       {Nostrum.Bot, bot_options}
     ]
 

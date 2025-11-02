@@ -45,25 +45,29 @@ defmodule Mommy.Discord do
     Interaction.create_response(interaction, %{type: 4, data: %{content: message}})
   end
 
-  def handle_event({:VOICE_READY, event, _ws_state}) do
+  def handle_event({:VOICE_READY, %{guild_id: guild_id} = event, _ws_state}) do
     Logger.warning(event, label: "VOICE_READY")
 
-    guild_id = 475_154_983_910_899_722  # Extract this from event if available
-
     {:ok, supervisor, pipeline} =
-      Membrane.Pipeline.start_link(Mommy.Audio, %{
+      Membrane.Pipeline.start(Mommy.Audio, %{
         output_file: "aaa.raw"
       })
 
     # Register pipeline with TableManager instead of global
-    Mommy.TableManager.register_pipeline(guild_id, supervisor)
+    # Mommy.TableManager.register_pipeline(guild_id, supervisor)
+    :global.register_name(Mommy.Supervisor, supervisor) |> dbg
+    :global.register_name(Mommy.Pipeline, pipeline) |> dbg
 
     Voice.start_listen_async(guild_id)
   end
 
   def handle_event({:VOICE_INCOMING_PACKET, rtp_packet, _ws_state}) do
-    guild_id = 475_154_983_910_899_722  # You might want to extract this from the packet or store it somewhere
-    Mommy.TableManager.send_rtp_packet(guild_id, rtp_packet)
+    # You might want to extract this from the packet or store it somewhere
+    # guild_id = 475_154_983_910_899_722
+    pid = :global.whereis_name(Mommy.Supervisor)
+    # Membrane.Pipeline.call(pid, rtp_packet)
+    # :global.send(Mommy.Supervisor, {:rtp_packet, rtp_packet})
+    # Mommy.TableManager.send_rtp_packet(guild_id, rtp_packet)
   end
 
   def handle_event(_), do: :noop
