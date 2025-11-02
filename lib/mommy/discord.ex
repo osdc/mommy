@@ -15,6 +15,8 @@ defmodule Mommy.Discord do
   require Logger
 
   def handle_event({:READY, event, _ws_state}) do
+    :ets.new(:membrane_pipelines, [:named_table, :set, :public]) |> dbg
+
     event.guilds
     |> Enum.each(fn guild ->
       ApplicationCommand.create_guild_command(
@@ -38,15 +40,28 @@ defmodule Mommy.Discord do
 
       voice_channel_id ->
         Voice.join_channel(guild_id, voice_channel_id)
-        # Voice.start_listen_async(guild_id)
     end
 
     Interaction.create_response(interaction, %{type: 4, data: %{content: message}})
   end
 
+  def handle_event({:VOICE_READY, event, _ws_state}) do
+    Logger.warning(event, label: "VOICE_READY")
+
+    {:ok, _supervisor, pipeline} =
+      Membrane.Pipeline.start_link(Mommy.Audio, %{
+        output_file: "aaa.raw"
+      })
+
+    :ets.insert(:membrane_pipelines, {"foo", pipeline})
+
+    Voice.start_listen_async(475_154_983_910_899_722)
+  end
+
   def handle_event({:VOICE_INCOMING_PACKET, rtp_packet, _ws_state}) do
-    # Run the command, and check for a response message, or default to a checkmark emoji
-    Logger.info("aaaaa")
+    # Logger.info(rtp_packet)
+    pipeline = :ets.lookup(:membrane_pipelines, "foo")
+    Membrane.Core.call(pipeline, rtp_packet)
   end
 
   def handle_event(_), do: :noop

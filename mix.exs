@@ -60,8 +60,12 @@ defmodule Mommy.MixProject do
       {:membrane_file_plugin, "~> 0.17"},
       # For writing .wav files
       {:membrane_wav_plugin, "~> 0.10"},
-      # For decoding Opus audio from Discord
-      {:membrane_opus_plugin, "~> 0.20"}
+      {:membrane_portaudio_plugin, "~> 0.19"},
+      {:membrane_opus_plugin, "~> 0.20"},
+      {:membrane_rtp_plugin, "~> 0.31"},
+      {:membrane_rtp_opus_plugin, "~> 0.10"},
+      {:membrane_mp3_lame_plugin, "~> 0.18.4"}
+      # {:membrane_ffmpeg_swresample_plugin, "~> 0.20"}
     ]
   end
 

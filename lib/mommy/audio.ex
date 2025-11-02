@@ -53,23 +53,49 @@ defmodule Mommy.Audio do
     >>
   end
 
-  # @impl true
-  # def handle_init(ctx , opts) do
-  #   children = [
-  #     source: %Membrane.Discord.Source{
-  #       token: System.get_env("1434169620549599393"),
-  #       guild_id: "475154983910899722",
-  #       channel_id: "476759193244925954"
-  #     },
-  #     decoder: Membrane.Opus.Decoder,
-  #     sink: %Membrane.File.Sink{location: "output.wav"}
-  #   ]
-  #   links= [
-  #     link(:source)
-  #     |> to(:decoder)
-  #     |> to(:sink)
-  #   ]
+  @impl true
+  def handle_init(_ctx, opts) do
+    spec =
+      [
+        child(:rtp_source, %Membrane.RTP.SessionBin{
+          secure?: false,
+          rtcp_receiver_report_interval: nil,
+          rtcp_sender_report_interval: nil
+        })
+        # |> child(:demuxer, %Membrane.RTP.Demuxer{})
+      ]
 
-  # {{:ok, spec: %Membrane.ChildrenSpec{children: children, links: links}}, %{}}
-  # end
+    {[spec: spec], %{output_file: opts.output_file, ssrc: nil}}
+  end
+
+  @impl true
+  def handle_child_notification(
+        {:new_rtp_stream, ssrc, _pt, _extensions},
+        :rtp_source,
+        _ctx,
+        state
+      ) do
+    IO.puts("New RTP stream detected with SSRC: #{ssrc}")
+
+    spec =
+      [
+        get_child(:rtp_source)
+        |> via_out(:output, options: [stream_id: {:encoding_name, :opus}])
+        |> child(:depayloader, Membrane.RTP.Opus.Depayloader)
+        |> child(:decoder, Membrane.Opus.Decoder)
+        |> child(:audio_player, Membrane.PortAudio.Sink)
+      ]
+
+    # |> child(:mp3_encoder, Membrane.MP3.Lame.Encoder)
+    # |> child(:sink, %Membrane.File.Sink{
+    #   location: opts.output_file
+    # })
+    {[spec: spec], %{state | ssrc: ssrc}}
+  end
+
+  @impl true
+  def handle_child_notification(notification, element, _ctx, state) do
+    IO.inspect(notification, label: "Notification from #{element}")
+    {[], state}
+  end
 end
