@@ -53,15 +53,18 @@ defmodule Mommy.Discord do
         output_file: "aaa.raw"
       })
 
-    :ets.insert(:membrane_pipelines, {"foo", pipeline})
+    # :ets.insert(:membrane_pipelines, {"foo", pipeline})
+    :global.register_name(:membrane_pipe, pipeline)
 
     Voice.start_listen_async(475_154_983_910_899_722)
   end
 
   def handle_event({:VOICE_INCOMING_PACKET, rtp_packet, _ws_state}) do
     # Logger.info(rtp_packet)
-    pipeline = :ets.lookup(:membrane_pipelines, "foo")
-    Membrane.Core.call(pipeline, rtp_packet)
+    # pipeline = :ets.lookup(:membrane_pipelines, "foo")
+    # Membrane.Core.call(pipeline, rtp_packet)
+
+    :global.send(:membrane_pipe, {:rtp_packet, rtp_packet})
   end
 
   def handle_event(_), do: :noop

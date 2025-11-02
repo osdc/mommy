@@ -98,4 +98,9 @@ defmodule Mommy.Audio do
     IO.inspect(notification, label: "Notification from #{element}")
     {[], state}
   end
+
+  @impl true
+  def handle_info({:rtp_packet, rtp_packet}, _state) do
+    Membrane.Core.call(self(), rtp_packet)
+  end
 end
