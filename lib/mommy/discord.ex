@@ -15,7 +15,7 @@ defmodule Mommy.Discord do
   require Logger
 
   def handle_event({:READY, event, _ws_state}) do
-    :ets.new(:membrane_pipelines, [:named_table, :set, :public]) |> dbg
+    # Start the table manager
 
     event.guilds
     |> Enum.each(fn guild ->
@@ -48,23 +48,22 @@ defmodule Mommy.Discord do
   def handle_event({:VOICE_READY, event, _ws_state}) do
     Logger.warning(event, label: "VOICE_READY")
 
-    {:ok, _supervisor, pipeline} =
+    guild_id = 475_154_983_910_899_722  # Extract this from event if available
+
+    {:ok, supervisor, pipeline} =
       Membrane.Pipeline.start_link(Mommy.Audio, %{
         output_file: "aaa.raw"
       })
 
-    # :ets.insert(:membrane_pipelines, {"foo", pipeline})
-    :global.register_name(:membrane_pipe, pipeline)
+    # Register pipeline with TableManager instead of global
+    Mommy.TableManager.register_pipeline(guild_id, supervisor)
 
-    Voice.start_listen_async(475_154_983_910_899_722)
+    Voice.start_listen_async(guild_id)
   end
 
   def handle_event({:VOICE_INCOMING_PACKET, rtp_packet, _ws_state}) do
-    # Logger.info(rtp_packet)
-    # pipeline = :ets.lookup(:membrane_pipelines, "foo")
-    # Membrane.Core.call(pipeline, rtp_packet)
-
-    :global.send(:membrane_pipe, {:rtp_packet, rtp_packet})
+    guild_id = 475_154_983_910_899_722  # You might want to extract this from the packet or store it somewhere
+    Mommy.TableManager.send_rtp_packet(guild_id, rtp_packet)
   end
 
   def handle_event(_), do: :noop

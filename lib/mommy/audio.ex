@@ -100,7 +100,9 @@ defmodule Mommy.Audio do
   end
 
   @impl true
-  def handle_info({:rtp_packet, rtp_packet}, _state) do
-    Membrane.Core.call(self(), rtp_packet)
+  def handle_cast({:rtp_packet, rtp_packet}, state) do
+    # Send the RTP packet to the RTP source element
+    actions = [notify_child: {:rtp_source, {:rtp_packet, rtp_packet}}]
+    {actions, state}
   end
 end
