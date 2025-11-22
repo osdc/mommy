@@ -16,17 +16,18 @@ defmodule Mommy.Application do
 
     children = [
       # Start the Telemetry supervisor
-      MommyWeb.Telemetry,
+      # MommyWeb.Telemetry,
       # Start the Ecto repository
       # Mommy.Repo,
       # Start the PubSub system
-      {Phoenix.PubSub, name: Mommy.PubSub},
+      # {Phoenix.PubSub, name: Mommy.PubSub},
       # Start Finch
-      {Finch, name: Mommy.Finch},
+      # {Finch, name: Mommy.Finch},
       # Start the Endpoint (http/https)
-      MommyWeb.Endpoint,
+      # MommyWeb.Endpoint,
       # Mommy.Audio,
-      Mommy.TableManager,
+      # Mommy.TableManager,
+      {DynamicSupervisor, name: Mommy.VoiceGuildSupervisor, strategy: :one_for_one},
       {Nostrum.Bot, bot_options}
     ]
 

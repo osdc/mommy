@@ -4,51 +4,54 @@ defmodule Mommy.DiscordRtpSource do
   and outputs them for decoding.
   """
   use Membrane.Source
-  require Logger
-  alias Membrane.{Buffer, RemoteStream, Opus}
 
-  def_output_pad :output,
-    accepted_format: %RemoteStream{type: :packetized, content_format: Opus},
+  require Logger
+
+  alias Membrane.{Buffer, RemoteStream}
+  alias Membrane.Opus
+
+  # def_output_pad(:output,
+  #   accepted_format: %RemoteStream{type: :packetized, content_format: Opus},
+  #   flow_control: :push
+  # )
+
+  def_output_pad(:output,
+    accepted_format: %Opus{self_delimiting?: false, channels: 1},
     flow_control: :push
+  )
+
+  def_options(
+    receiver_pid: [spec: pid(), description: "PID to register with for receiving packets"]
+  )
 
   @impl true
-  def handle_init(_ctx, _opts) do
-    :global.register_name(__MODULE__, self())
-    {[], %{playing?: false, buffer: []}}
+  def handle_init(_ctx, opts) do
+    # Logger.info("pipeline init: #{opts.receiver_pid} | #{self()}")
+    {[], %{receiver_pid: opts.receiver_pid, pts: 0, queue: :queue.new()}}
   end
 
   @impl true
   def handle_playing(_ctx, state) do
-    stream_format = %RemoteStream{type: :packetized, content_format: Opus}
-
-    # Send any buffered packets after the stream format
-    buffer_actions = Enum.map(state.buffer, fn buffer -> {:buffer, {:output, buffer}} end)
-
-    actions = [stream_format: {:output, stream_format}] ++ buffer_actions
-
-    {actions, %{state | playing?: true, buffer: []}}
+    # Register this element to receive voice packets
+    # Logger.info("playing startomg, registering: #{state.receiver_pid} | #{self()}")
+    send(state.receiver_pid, {:register_sink, self()})
+    # stream_format = %RemoteStream{type: :packetized, content_format: Opus}
+    stream_format = %Opus{self_delimiting?: false, channels: 1}
+    {[stream_format: {:output, stream_format}], state}
   end
 
   @impl true
-  def handle_info({:discord_rtp_packet, {{sequence_number, _timestamp, ssrc}, payload}}, _ctx, state) do
-    unless payload == <<248, 255, 254>> do       #this is a silence frame
-      Logger.debug("Processing Opus frame: seq=#{sequence_number}, ssrc=#{ssrc}, size=#{byte_size(payload)}")
-      buffer = %Buffer{payload: payload}
+  def handle_info({:voice_packet, {metadata, opus_data}}, _ctx, state) do
+    frame_duration = Membrane.Time.milliseconds(20)
 
-      if state.playing? do
-        {[buffer: {:output, buffer}], state}
-      else
-        # Buffer until we start playing i.e. membrane pipeline is ready
-        {[], %{state | buffer: [buffer | state.buffer]}}
-      end
-    else
-      {[], state}
-    end
-  end
+    buffer = %Buffer{
+      payload: opus_data,
+      metadata: %{rtp: metadata}
+      # pts: state.pts
+    }
 
-  @impl true
-  def handle_info(msg, _ctx, state) do
-    Logger.warning("Unexpected message: #{inspect(msg, limit: 50)}")
-    {[], state}
+    new_pts = state.pts + frame_duration
+
+    {[buffer: {:output, buffer}], %{state | pts: new_pts}}
   end
 end

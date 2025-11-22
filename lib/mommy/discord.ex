@@ -15,8 +15,6 @@ defmodule Mommy.Discord do
   require Logger
 
   def handle_event({:READY, event, _ws_state}) do
-    # Start the table manager
-
     event.guilds
     |> Enum.each(fn guild ->
       ApplicationCommand.create_guild_command(
@@ -27,6 +25,8 @@ defmodule Mommy.Discord do
           options: []
         }
       )
+
+      Voice.leave_channel(guild.id)
     end)
   end
 
@@ -42,33 +42,32 @@ defmodule Mommy.Discord do
         Voice.join_channel(guild_id, voice_channel_id)
     end
 
-    Interaction.create_response(interaction, %{type: 4, data: %{content: message}})
+    # Interaction.create_response(interaction, %{type: 4, data: %{content: message}})
   end
 
   def handle_event({:VOICE_READY, %{guild_id: guild_id} = event, _ws_state}) do
     Logger.warning(event, label: "VOICE_READY")
 
-    {:ok, supervisor, pipeline} =
-      Membrane.Pipeline.start(Mommy.Audio, %{
-        output_file: "aaa.raw"
-      })
-
-    # Register pipeline with TableManager instead of global
-    # Mommy.TableManager.register_pipeline(guild_id, supervisor)
-    :global.register_name(Mommy.Supervisor, supervisor) |> dbg
-    :global.register_name(Mommy.Pipeline, pipeline) |> dbg
+    DynamicSupervisor.start_child(
+      Mommy.VoiceGuildSupervisor,
+      {Mommy.AudioRouter, %{guild_id: guild_id}}
+    )
 
     Voice.start_listen_async(guild_id)
   end
 
-  def handle_event({:VOICE_INCOMING_PACKET, rtp_packet, _ws_state}) do
-    # Forward the RTP packet to the custom Discord RTP source
-    case :global.whereis_name(Mommy.DiscordRtpSource) do
-      :undefined ->
+  def handle_event({:VOICE_INCOMING_PACKET, rtp_packet, %{guild_id: guild_id} = ws_state}) do
+    # Forward the RTP packet to the custom Discord RTP sourceturn
+    case DynamicSupervisor.start_child(
+           Mommy.VoiceGuildSupervisor,
+           {Mommy.AudioRouter, %{guild_id: guild_id}}
+         ) do
+      {:ok, source_pid} ->
+        send(source_pid, {:discord_rtp_packet, rtp_packet})
+
+      _ ->
         # Source not available, silently drop
         :ok
-      source_pid ->
-        send(source_pid, {:discord_rtp_packet, rtp_packet})
     end
   end
 

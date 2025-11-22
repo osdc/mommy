@@ -47,12 +47,14 @@ defmodule Mommy.TableManager do
     case :ets.lookup(:membrane_pipelines, guild_id) do
       [{^guild_id, pipeline_pid}] ->
         # Send RTP packet to the pipeline
-        #send(pipeline_pid,{:rtp_packet, rtp_packet})
+        # send(pipeline_pid,{:rtp_packet, rtp_packet})
         GenServer.cast(pipeline_pid, {:rtp_packet, rtp_packet})
+
       [] ->
         require Logger
         Logger.warning("No pipeline found for guild_id: #{guild_id}")
     end
+
     {:noreply, state}
   end
 

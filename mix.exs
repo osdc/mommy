@@ -54,17 +54,15 @@ defmodule Mommy.MixProject do
       {:openai_ex, "~> 0.9"},
       {:nostrum, github: "Kraigie/nostrum"},
       # --- Discord + Audio dependencies ---
-      # Core Membrane framework
       {:membrane_core, "~> 1.2"},
-      # For saving audio to file
       {:membrane_file_plugin, "~> 0.17"},
-      # For writing .wav files
-      {:membrane_wav_plugin, "~> 0.10"},
       {:membrane_portaudio_plugin, "~> 0.19"},
       {:membrane_opus_plugin, "~> 0.20"},
+      {:membrane_ogg_plugin, "~> 0.5"},
       {:membrane_rtp_plugin, "~> 0.31"},
       {:membrane_rtp_opus_plugin, "~> 0.10"},
-      {:membrane_mp3_lame_plugin, "~> 0.18.4"}
+      {:membrane_mp3_lame_plugin, "~> 0.18"},
+      {:membrane_raw_audio_format, "~> 0.12"}
       # {:membrane_ffmpeg_swresample_plugin, "~> 0.20"}
     ]
   end
@@ -80,7 +78,8 @@ defmodule Mommy.MixProject do
       setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      # test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
+      test: ["test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["tailwind default", "esbuild default"],
       "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]
